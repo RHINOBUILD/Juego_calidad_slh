@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Encuentra el riesgo · Saint Luke's</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0A2A5E; --navy-2:#123B7A; --sky:#5BB8E8; --sky-2:#D6EEFA;
+    --ink:#0F1B2D; --muted:#5B6B82; --bg:#F3F8FC; --ok:#16A34A; --bad:#DC2626; --card:#fff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,sans-serif}
+  .app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+  header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px}
+  .brand-dot{width:30px;height:30px;border-radius:8px;background:var(--sky);display:grid;place-items:center;font-weight:800;color:var(--navy);font-size:14px}
+  header .t{font-weight:700;font-size:15px;line-height:1.1}
+  header .s{font-size:11px;color:var(--sky-2);opacity:.9}
+  .screen{display:none;flex:1;flex-direction:column}
+  .screen.on{display:flex}
+  /* Inicio */
+  .hero{padding:22px 18px 8px}
+  .chip{display:inline-block;background:var(--sky-2);color:var(--navy);font-weight:700;font-size:11px;padding:4px 10px;border-radius:99px;letter-spacing:.02em}
+  h1{font-size:28px;line-height:1.1;margin:10px 0 6px;color:var(--navy);font-weight:800}
+  .lead{color:var(--muted);font-size:14px;margin:0 0 14px;line-height:1.45}
+  .rules{background:#fff;border:1px solid #DCE7F2;border-radius:14px;padding:12px 14px;margin:0 18px 14px;font-size:13.5px;line-height:1.5}
+  .rules b{color:var(--navy)}
+  form{padding:0 18px 22px;display:flex;flex-direction:column;gap:10px}
+  label{font-size:12px;font-weight:700;color:var(--navy);display:flex;flex-direction:column;gap:5px}
+  input,select{font:inherit;font-size:15px;padding:11px 12px;border:1.5px solid #CFDDEA;border-radius:10px;background:#fff;color:var(--ink)}
+  input:focus,select:focus{outline:none;border-color:var(--sky)}
+  .row{display:flex;gap:10px}.row>*{flex:1}
+  .err{color:var(--bad);font-size:12px;min-height:16px}
+  .btn{font:inherit;font-weight:700;font-size:16px;border:0;border-radius:12px;padding:14px;background:var(--navy);color:#fff;cursor:pointer}
+  .btn:active{transform:scale(.98)}
+  .btn.sec{background:var(--sky-2);color:var(--navy)}
+  /* Juego */
+  .hud{display:flex;gap:8px;padding:10px 12px;background:#fff;border-bottom:1px solid #E2EBF3}
+  .stat{flex:1;background:var(--bg);border-radius:10px;padding:6px 8px;text-align:center}
+  .stat .k{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .stat .v{font-size:18px;font-weight:800;color:var(--navy)}
+  .stat.warn .v{color:var(--bad)}
+  .bar{height:4px;background:#E2EBF3}.bar i{display:block;height:100%;background:var(--sky);width:100%;transition:width .9s linear}
+  .scene-wrap{padding:8px;flex:1}
+  svg#scene{width:100%;height:auto;display:block;border-radius:14px;background:#fff;touch-action:manipulation;cursor:pointer;box-shadow:0 2px 10px rgba(10,42,94,.08)}
+  .hint{font-size:12.5px;color:var(--muted);text-align:center;padding:2px 12px 14px}
+  .hit{fill:rgba(0,0,0,0);pointer-events:all}
+  .hitline{fill:none;stroke:rgba(0,0,0,0);stroke-width:30;pointer-events:stroke;stroke-linecap:round}
+  .miss{animation:fade 0.9s ease forwards}
+  @keyframes fade{0%{opacity:1;transform:scale(.6)}30%{transform:scale(1.1)}100%{opacity:0}}
+  .shake{animation:shake .3s}
+  @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  /* Modal */
+  .ov{position:fixed;inset:0;background:rgba(10,42,94,.45);display:none;align-items:flex-end;justify-content:center;z-index:9}
+  .ov.on{display:flex}
+  .sheet{background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:18px 18px 22px;animation:up .25s ease;max-height:85vh;overflow:auto}
+  @keyframes up{from{transform:translateY(40px);opacity:0}}
+  .sheet .ok{display:flex;align-items:center;gap:8px;color:var(--ok);font-weight:800;font-size:13px}
+  .sheet h2{margin:8px 0 6px;font-size:20px;color:var(--navy);line-height:1.2}
+  .sheet h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--navy-2);margin:14px 0 4px}
+  .sheet p{margin:0;font-size:14px;line-height:1.5;color:#26364D}
+  .sheet .btn{width:100%;margin-top:16px}
+  /* Resultados */
+  .res{padding:18px}
+  .score{background:var(--navy);color:#fff;border-radius:18px;padding:18px;text-align:center}
+  .score .big{font-size:44px;font-weight:800;line-height:1}
+  .score .lbl{font-size:12px;color:var(--sky-2)}
+  .verdict{margin-top:10px;display:inline-block;padding:5px 12px;border-radius:99px;font-weight:800;font-size:13px}
+  .pass{background:#DCFCE7;color:#166534}.fail{background:#FEE2E2;color:#991B1B}
+  .grid3{display:flex;gap:8px;margin:12px 0}
+  .grid3 .stat{background:#fff;border:1px solid #E2EBF3}
+  .list{display:flex;flex-direction:column;gap:8px;margin:6px 0 16px}
+  .item{background:#fff;border:1px solid #E2EBF3;border-radius:12px;padding:10px 12px}
+  .item .h{display:flex;gap:8px;align-items:flex-start;font-weight:700;font-size:14px;color:var(--navy)}
+  .item .m{font-size:13px;color:#26364D;margin-top:4px;line-height:1.45}
+  .item .c{font-size:11px;color:var(--muted);font-weight:700;margin-top:2px}
+  .ic{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:12px;margin-top:1px}
+  .ic.y{background:var(--ok)}.ic.n{background:var(--bad)}
+  .sec-t{font-size:13px;font-weight:800;color:var(--navy);margin:16px 0 4px}
+  .status{font-size:12px;color:var(--muted);text-align:center;margin:8px 0 12px}
+  .actions{display:flex;flex-direction:column;gap:8px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand-dot">SL</div>
+    <div><div class="t">Saint Luke's · Capacitación</div><div class="s">Seguridad del paciente y Seguridad e Higiene</div></div>
+  </header>
+
+  <!-- INICIO -->
+  <section class="screen on" id="sStart">
+    <div class="hero">
+      <span class="chip">ESCENARIO 1 · HABITACIÓN 204</span>
+      <h1>Encuentra el riesgo</h1>
+      <p class="lead">Entras a revisar la habitación 204. Algo no está bien. Encuentra todos los riesgos antes de que ocurra un evento adverso.</p>
+    </div>
+    <div class="rules">
+      • Hay <b>9 riesgos</b> escondidos en la escena.<br>
+      • Tócalos antes de que se acabe el tiempo: <b>2 minutos</b>.<br>
+      • Cada toque fuera de un riesgo <b>resta puntos</b>.<br>
+      • Apruebas al encontrar al menos <b>7 de 9</b>.
+    </div>
+    <form id="fStart" novalidate>
+      <label>Nombre completo<input id="iName" autocomplete="name" placeholder="Ej. María López Ruiz"></label>
+      <div class="row">
+        <label>No. de empleado<input id="iEmp" inputmode="numeric" placeholder="Opcional"></label>
+        <label>Sede<select id="iSede">
+          <option>San José del Cabo</option><option>Cabo San Lucas</option><option>Otra sede</option>
+        </select></label>
+      </div>
+      <label>Área<select id="iArea">
+        <option>Enfermería</option><option>Médico</option><option>Intendencia</option><option>Mantenimiento</option>
+        <option>Laboratorio</option><option>Imagenología</option><option>Nutrición</option><option>Administrativo</option><option>Otra</option>
+      </select></label>
+      <div class="err" id="eStart"></div>
+      <button class="btn" type="submit">Comenzar</button>
+    </form>
+  </section>
+
+  <!-- JUEGO -->
+  <section class="screen" id="sGame">
+    <div class="hud">
+      <div class="stat"><div class="k">Riesgos</div><div class="v" id="hFound">0/9</div></div>
+      <div class="stat" id="tBox"><div class="k">Tiempo</div><div class="v" id="hTime">2:00</div></div>
+      <div class="stat"><div class="k">Puntos</div><div class="v" id="hScore">0</div></div>
+    </div>
+    <div class="bar"><i id="tBar"></i></div>
+    <div class="scene-wrap">
+      <svg id="scene" viewBox="0 0 400 640" xmlns="http://www.w3.org/2000/svg" aria-label="Habitación de hospital">
+        <!-- Pared y piso -->
+        <rect x="0" y="0" width="400" height="400" fill="#E6F1F9"/>
+        <rect x="0" y="392" width="400" height="10" fill="#B8C7D6"/>
+        <rect x="0" y="402" width="400" height="238" fill="#DCE3EA"/>
+        <g stroke="#C9D3DD" stroke-width="1">
+          <line x1="0" y1="450" x2="400" y2="450"/><line x1="0" y1="510" x2="400" y2="510"/><line x1="0" y1="580" x2="400" y2="580"/>
+          <line x1="80" y1="402" x2="60" y2="640"/><line x1="160" y1="402" x2="150" y2="640"/><line x1="240" y1="402" x2="245" y2="640"/><line x1="320" y1="402" x2="340" y2="640"/>
+        </g>
+        <!-- Ventana -->
+        <rect x="20" y="40" width="110" height="90" rx="4" fill="#9FD6F4" stroke="#7C93AB" stroke-width="5"/>
+        <line x1="75" y1="40" x2="75" y2="130" stroke="#7C93AB" stroke-width="4"/>
+        <circle cx="105" cy="62" r="10" fill="#FFF3B0"/>
+        <path d="M24 118 Q50 100 74 116 Q100 98 128 114 L128 128 L24 128Z" fill="#7CC4A4"/>
+        <!-- Monitor -->
+        <rect x="30" y="170" width="80" height="54" rx="6" fill="#1E293B"/>
+        <polyline points="36,200 52,200 58,186 64,212 70,196 78,200 104,200" fill="none" stroke="#4ADE80" stroke-width="2"/>
+        <text x="40" y="216" fill="#7DD3FC" font-size="8" font-family="monospace">FC 82  SpO2 96</text>
+        <line x1="70" y1="224" x2="70" y2="285" stroke="#94A3B8" stroke-width="3"/>
+        <!-- Pizarrón -->
+        <rect x="155" y="40" width="150" height="85" rx="4" fill="#fff" stroke="#94A3B8" stroke-width="3"/>
+        <text x="165" y="60" font-size="12" font-weight="700" fill="#0A2A5E">HAB. 204</text>
+        <text x="165" y="78" font-size="9" fill="#334155">Enfermera: Laura</text>
+        <text x="165" y="94" font-size="9" fill="#334155">Dieta: blanda</text>
+        <text x="165" y="110" font-size="9" fill="#334155">Riesgo caída: <tspan font-weight="800" fill="#DC2626">ALTO</tspan></text>
+        <g transform="rotate(8 280 70)">
+          <rect x="260" y="52" width="40" height="34" fill="#FDE68A" stroke="#E5C255"/>
+          <text x="264" y="65" font-size="7.5" fill="#1E293B">Insulina</text>
+          <text x="266" y="78" font-size="10" font-weight="700" fill="#1E293B">10U</text>
+        </g>
+        <!-- Dispensador de gel (vacío) -->
+        <rect x="340" y="168" width="34" height="58" rx="6" fill="#fff" stroke="#94A3B8" stroke-width="2"/>
+        <rect x="347" y="178" width="20" height="26" rx="3" fill="#F1F5F9" stroke="#CBD5E1"/>
+        <rect x="347" y="202" width="20" height="2" fill="#F87171"/>
+        <text x="347" y="216" font-size="8" font-weight="700" fill="#0A2A5E">GEL</text>
+        <rect x="352" y="226" width="10" height="6" fill="#94A3B8"/>
+        <!-- Contenedor punzocortantes (sobrellenado) -->
+        <g>
+          <line x1="342" y1="272" x2="334" y2="250" stroke="#94A3B8" stroke-width="2"/>
+          <rect x="332" y="246" width="5" height="7" fill="#F97316" transform="rotate(-20 334 250)"/>
+          <line x1="352" y1="272" x2="355" y2="246" stroke="#94A3B8" stroke-width="2"/>
+          <rect x="353" y="242" width="5" height="7" fill="#3B82F6"/>
+          <line x1="362" y1="272" x2="372" y2="252" stroke="#94A3B8" stroke-width="2"/>
+          <rect x="370" y="248" width="5" height="7" fill="#F97316" transform="rotate(25 372 252)"/>
+          <rect x="330" y="270" width="48" height="56" rx="4" fill="#DC2626"/>
+          <rect x="328" y="266" width="52" height="8" rx="2" fill="#B91C1C"/>
+          <text x="338" y="302" font-size="9" font-weight="800" fill="#fff">RPBI</text>
+          <text x="354" y="314" font-size="5" text-anchor="middle" fill="#FEE2E2">PUNZOCORTANTES</text>
+        </g>
+        <!-- Contacto en pared -->
+        <rect x="318" y="372" width="16" height="20" rx="2" fill="#fff" stroke="#94A3B8"/>
+        <!-- Mesa lateral + KCl -->
+        <rect x="6" y="340" width="62" height="8" rx="2" fill="#94A3B8"/>
+        <rect x="10" y="348" width="54" height="66" fill="#CBD5E1"/>
+        <line x1="10" y1="380" x2="64" y2="380" stroke="#94A3B8"/>
+        <circle cx="37" cy="364" r="2" fill="#64748B"/><circle cx="37" cy="396" r="2" fill="#64748B"/>
+        <rect x="14" y="414" width="6" height="14" fill="#94A3B8"/><rect x="54" y="414" width="6" height="14" fill="#94A3B8"/>
+        <rect x="30" y="316" width="14" height="24" rx="2" fill="#E0F2FE" stroke="#94A3B8"/>
+        <rect x="30" y="311" width="14" height="6" rx="1" fill="#DC2626"/>
+        <text x="31" y="332" font-size="6" font-weight="700" fill="#0A2A5E">KCl</text>
+        <rect x="50" y="326" width="10" height="14" rx="2" fill="#fff" stroke="#CBD5E1"/>
+        <!-- Cama -->
+        <rect x="72" y="290" width="14" height="110" rx="4" fill="#64748B"/>
+        <rect x="308" y="316" width="12" height="84" rx="4" fill="#64748B"/>
+        <rect x="86" y="354" width="222" height="14" fill="#94A3B8"/>
+        <line x1="100" y1="368" x2="100" y2="422" stroke="#64748B" stroke-width="5"/>
+        <line x1="294" y1="368" x2="294" y2="422" stroke="#64748B" stroke-width="5"/>
+        <circle cx="100" cy="428" r="7" fill="#334155"/><circle cx="294" cy="428" r="7" fill="#334155"/>
+        <!-- Barandal abajo -->
+        <line x1="170" y1="368" x2="170" y2="380" stroke="#64748B" stroke-width="3"/>
+        <line x1="262" y1="368" x2="262" y2="380" stroke="#64748B" stroke-width="3"/>
+        <rect x="150" y="378" width="130" height="9" rx="4" fill="#CBD5E1" stroke="#64748B" stroke-width="1.5"/>
+        <!-- Colchón y paciente -->
+        <rect x="86" y="336" width="222" height="18" rx="4" fill="#fff" stroke="#CBD5E1"/>
+        <ellipse cx="112" cy="333" rx="26" ry="9" fill="#fff" stroke="#E2E8F0"/>
+        <circle cx="112" cy="319" r="14" fill="#E0B48F"/>
+        <path d="M98 316 Q112 300 126 314 Q118 308 106 310Z" fill="#4B3621"/>
+        <rect x="122" y="322" width="184" height="18" rx="8" fill="#BFE3F5"/>
+        <path d="M140 330 Q165 333 190 336" fill="none" stroke="#E0B48F" stroke-width="7" stroke-linecap="round"/>
+        <circle cx="194" cy="336" r="5" fill="#E0B48F"/>
+        <!-- Bote con bolsa negra y gasas con sangre -->
+        <rect x="20" y="512" width="60" height="70" rx="5" fill="#94A3B8"/>
+        <path d="M16 512 Q50 500 84 512 L82 520 Q50 510 18 520Z" fill="#111827"/>
+        <ellipse cx="40" cy="505" rx="10" ry="6" fill="#fff"/>
+        <ellipse cx="58" cy="502" rx="11" ry="6" fill="#fff"/>
+        <circle cx="38" cy="504" r="3" fill="#B91C1C"/><circle cx="60" cy="501" r="3.5" fill="#B91C1C"/><circle cx="54" cy="504" r="2" fill="#DC2626"/>
+        <!-- Charco -->
+        <ellipse cx="190" cy="522" rx="62" ry="15" fill="#9FD3F2" opacity=".65"/>
+        <ellipse cx="172" cy="518" rx="16" ry="3" fill="#fff" opacity=".7"/>
+        <!-- Extensión cruzando el paso -->
+        <path d="M326 392 C330 470 250 570 398 606" fill="none" stroke="#F59E0B" stroke-width="4"/>
+        <rect x="320" y="384" width="12" height="10" rx="2" fill="#F59E0B"/>
+
+        <!-- Capa de marcas -->
+        <g id="marks"></g>
+        <!-- Zonas de riesgo (invisibles) -->
+        <g id="hits">
+          <circle class="hit" data-h="pulsera" cx="184" cy="335" r="22"/>
+          <rect class="hit" data-h="barandal" x="140" y="366" width="150" height="30"/>
+          <rect class="hit" data-h="piso" x="122" y="500" width="136" height="44"/>
+          <circle class="hit" data-h="punzo" cx="354" cy="286" r="34"/>
+          <circle class="hit" data-h="gel" cx="357" cy="198" r="30"/>
+          <circle class="hit" data-h="kcl" cx="37" cy="326" r="24"/>
+          <circle class="hit" data-h="bolsa" cx="50" cy="530" r="40"/>
+          <path class="hitline" data-h="cable" d="M326 392 C330 470 250 570 398 606"/>
+          <circle class="hit" data-h="nota" cx="280" cy="69" r="26"/>
+        </g>
+      </svg>
+    </div>
+    <div class="hint">Toca directamente sobre lo que represente un riesgo.</div>
+  </section>
+
+  <!-- RESULTADOS -->
+  <section class="screen" id="sRes">
+    <div class="res">
+      <div class="score">
+        <div class="lbl">PUNTAJE FINAL</div>
+        <div class="big" id="rScore">0</div>
+        <div class="lbl" id="rWho"></div>
+        <div class="verdict" id="rVerdict"></div>
+      </div>
+      <div class="grid3">
+        <div class="stat"><div class="k">Encontrados</div><div class="v" id="rFound">0/9</div></div>
+        <div class="stat"><div class="k">Errores</div><div class="v" id="rMiss">0</div></div>
+        <div class="stat"><div class="k">Tiempo</div><div class="v" id="rTime">0s</div></div>
+      </div>
+      <div id="rMissedBox"><div class="sec-t">Riesgos que no encontraste</div><div class="list" id="rMissed"></div></div>
+      <div class="sec-t">Riesgos encontrados</div>
+      <div class="list" id="rFoundList"></div>
+      <div class="status" id="rStatus"></div>
+      <div class="actions">
+        <button class="btn" id="bAgain">Jugar de nuevo</button>
+        <button class="btn sec" id="bHome">Cambiar participante</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal de retroalimentación -->
+<div class="ov" id="ov">
+  <div class="sheet">
+    <div class="ok">✔ ¡Riesgo identificado!</div>
+    <span class="chip" id="mCat" style="margin-top:8px"></span>
+    <h2 id="mTitle"></h2>
+    <h3>¿Por qué es un riesgo?</h3><p id="mWhy"></p>
+    <h3>¿Qué debes hacer?</h3><p id="mFix"></p>
+    <button class="btn" id="mBtn">Continuar</button>
+  </div>
+</div>
+
+<script>
+/* ===== CONFIGURACIÓN =====
+   Pega aquí la URL del Web App de Apps Script para guardar resultados en Google Sheets.
+   Déjalo vacío para modo demostración. */
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbzFsd5cDytf3XsbV-lPfk0-Ym43BmjkcwMwMtQFOQXvJdwQeNT2Ka5IEkVt_5s5_w7S/exec";
+const ESCENARIO = "Habitación 204";
+const DURACION = 120;      // segundos
+const APROBAR = 7;         // riesgos mínimos para aprobar
+
+const H = [
+  {id:"pulsera", cat:"AESP 1 · Identificación del paciente", title:"Paciente sin pulsera de identificación",
+   why:"Sin brazalete no se puede confirmar quién es el paciente antes de administrar medicamentos, tomar muestras o hacer procedimientos. Es la causa de errores de paciente equivocado.",
+   fix:"Coloca el brazalete con al menos dos identificadores (nombre completo y fecha de nacimiento) y verifícalos antes de cada intervención. Nunca uses el número de cama como identificador."},
+  {id:"barandal", cat:"AESP 6 · Reducción del riesgo de caídas", title:"Barandal abajo en paciente con riesgo de caída alto",
+   why:"El pizarrón indica riesgo de caída ALTO y el barandal está abajo. El paciente puede caer de la cama al girarse o intentar levantarse.",
+   fix:"Sube los barandales, deja la cama en su posición más baja con frenos puestos, el timbre al alcance y registra la valoración del riesgo de caída."},
+  {id:"piso", cat:"AESP 6 · Caídas / Seguridad e Higiene", title:"Piso mojado sin señalamiento",
+   why:"Un charco sin señalizar provoca resbalones de pacientes, familiares y personal.",
+   fix:"Coloca el señalamiento de piso mojado de inmediato, avisa a intendencia y no te retires hasta que el área quede seca o señalizada."},
+  {id:"punzo", cat:"RPBI · NOM-087-SEMARNAT-SSA1", title:"Contenedor de punzocortantes sobrellenado",
+   why:"Las agujas sobresalen del contenedor. Cualquiera que lo manipule puede sufrir una punción accidental con riesgo de VIH, hepatitis B o C.",
+   fix:"Los contenedores se llenan solo hasta el 80 % de su capacidad; después se cierran y se sustituyen. Nunca empujes el contenido ni reencapuches agujas."},
+  {id:"gel", cat:"AESP 5 · Reducción del riesgo de infecciones", title:"Dispensador de gel vacío",
+   why:"Sin solución alcohólica en el punto de atención, el personal omite la higiene de manos en los 5 momentos y aumentan las infecciones asociadas a la atención.",
+   fix:"Reporta y solicita la reposición de inmediato. Mientras tanto, realiza lavado de manos con agua y jabón antes y después del contacto con el paciente."},
+  {id:"kcl", cat:"AESP 3 · Seguridad en el proceso de medicación", title:"Electrolito concentrado (KCl) en la mesa del paciente",
+   why:"El cloruro de potasio concentrado es un medicamento de alto riesgo: administrado sin diluir puede causar un paro cardiaco. No debe estar al alcance en la habitación.",
+   fix:"Regrésalo a su área de resguardo. Los electrolitos concentrados se almacenan separados, se preparan diluidos y etiquetados, y se administran con doble verificación."},
+  {id:"bolsa", cat:"RPBI · NOM-087-SEMARNAT-SSA1", title:"Gasas con sangre en bolsa negra",
+   why:"Los materiales de curación impregnados de sangre son residuos peligrosos biológico-infecciosos. En la bolsa negra terminan en la basura municipal y exponen a intendencia y a la comunidad.",
+   fix:"Deposita estos residuos en bolsa roja. Separa en el lugar donde se generan: bolsa negra solo para residuos comunes."},
+  {id:"cable", cat:"Seguridad e Higiene", title:"Extensión eléctrica cruzando el paso",
+   why:"Un cable en el suelo provoca tropiezos de personal y pacientes, y si se pisa o moja existe riesgo eléctrico.",
+   fix:"Retira la extensión o canalízala, conecta los equipos a contactos de grado hospitalario cercanos y reporta a Mantenimiento si faltan contactos."},
+  {id:"nota", cat:"AESP 2 · Comunicación efectiva", title:"Indicación en nota adhesiva con abreviatura \"U\"",
+   why:"Las indicaciones fuera del expediente se pierden. Además, la \"U\" de unidades puede leerse como un cero: \"10U\" puede convertirse en 100 unidades de insulina.",
+   fix:"Las indicaciones van solo en el expediente clínico. Escribe \"unidades\" completo, y en órdenes verbales aplica escuchar, escribir, leer y confirmar."}
+];
+const TOTAL = H.length;
+const byId = Object.fromEntries(H.map(h=>[h.id,h]));
+
+const $ = s=>document.querySelector(s);
+const svg = $("#scene"), marks = $("#marks");
+let S = {};
+let player = {};
+let tick = null;
+
+function show(id){document.querySelectorAll(".screen").forEach(e=>e.classList.toggle("on",e.id===id));window.scrollTo(0,0)}
+function fmt(t){t=Math.max(0,t);return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")}
+function score(){return Math.max(0, S.found.size*100 + (S.ended ? Math.max(0,S.left)*2 : 0) - S.miss*15)}
+function hud(){
+  $("#hFound").textContent = S.found.size+"/"+TOTAL;
+  $("#hTime").textContent = fmt(S.left);
+  $("#hScore").textContent = Math.max(0,S.found.size*100 - S.miss*15);
+  $("#tBox").classList.toggle("warn", S.left<=20);
+  $("#tBar").style.width = (S.left/DURACION*100)+"%";
+}
+
+$("#fStart").addEventListener("submit", e=>{
+  e.preventDefault();
+  const n = $("#iName").value.trim();
+  if(n.length<3){$("#eStart").textContent="Escribe tu nombre para registrar tu resultado.";$("#iName").focus();return}
+  $("#eStart").textContent="";
+  player = {nombre:n, empleado:$("#iEmp").value.trim(), sede:$("#iSede").value, area:$("#iArea").value};
+  start();
+});
+
+function start(){
+  S = {found:new Set(), miss:0, left:DURACION, paused:false, ended:false, t0:Date.now()};
+  marks.innerHTML = "";
+  hud(); show("sGame");
+  clearInterval(tick);
+  tick = setInterval(()=>{
+    if(S.paused||S.ended) return;
+    S.left--; hud();
+    if(S.left<=0) end();
+  },1000);
+}
+
+function pt(evt){
+  const p = svg.createSVGPoint(); p.x = evt.clientX; p.y = evt.clientY;
+  return p.matrixTransform(svg.getScreenCTM().inverse());
+}
+function mark(x,y,ok){
+  const ns="http://www.w3.org/2000/svg";
+  const g=document.createElementNS(ns,"g");
+  if(ok){
+    g.innerHTML = `<circle cx="${x}" cy="${y}" r="20" fill="rgba(22,163,74,.15)" stroke="#16A34A" stroke-width="3"/>
+      <path d="M${x-8} ${y} l6 6 l11 -12" fill="none" stroke="#16A34A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }else{
+    g.setAttribute("class","miss"); g.style.transformOrigin = x+"px "+y+"px";
+    g.innerHTML = `<path d="M${x-8} ${y-8} L${x+8} ${y+8} M${x+8} ${y-8} L${x-8} ${y+8}" stroke="#DC2626" stroke-width="4" stroke-linecap="round"/>`;
+    setTimeout(()=>g.remove(),900);
+  }
+  marks.appendChild(g);
+}
+
+svg.addEventListener("click", e=>{
+  if(S.paused||S.ended) return;
+  const p = pt(e);
+  const hit = e.target.closest && e.target.closest("[data-h]");
+  if(hit){
+    const id = hit.dataset.h;
+    if(S.found.has(id)) return;
+    S.found.add(id); mark(p.x,p.y,true); hud();
+    try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}
+    openFeedback(byId[id]);
+  }else{
+    S.miss++; mark(p.x,p.y,false); hud();
+    svg.classList.remove("shake"); void svg.offsetWidth; svg.classList.add("shake");
+  }
+});
+
+function openFeedback(h){
+  S.paused = true;
+  $("#mCat").textContent = h.cat; $("#mTitle").textContent = h.title;
+  $("#mWhy").textContent = h.why; $("#mFix").textContent = h.fix;
+  $("#ov").classList.add("on");
+}
+$("#mBtn").addEventListener("click", ()=>{
+  $("#ov").classList.remove("on"); S.paused = false;
+  if(S.found.size===TOTAL) end();
+});
+
+function itemHTML(h, ok){
+  return `<div class="item"><div class="h"><span class="ic ${ok?"y":"n"}">${ok?"✓":"✕"}</span><span>${h.title}</span></div>
+    <div class="c">${h.cat}</div>${ok?"":`<div class="m">${h.fix}</div>`}</div>`;
+}
+
+function end(){
+  if(S.ended) return;
+  S.ended = true; clearInterval(tick);
+  const used = DURACION - Math.max(0,S.left);
+  const pts = score();
+  const pass = S.found.size >= APROBAR;
+  $("#rScore").textContent = pts;
+  $("#rWho").textContent = player.nombre+" · "+player.area+" · "+player.sede;
+  const v=$("#rVerdict"); v.textContent = pass?"APROBADO":"NO APROBADO"; v.className="verdict "+(pass?"pass":"fail");
+  $("#rFound").textContent = S.found.size+"/"+TOTAL;
+  $("#rMiss").textContent = S.miss;
+  $("#rTime").textContent = used+"s";
+  const missed = H.filter(h=>!S.found.has(h.id));
+  $("#rMissedBox").style.display = missed.length?"block":"none";
+  $("#rMissed").innerHTML = missed.map(h=>itemHTML(h,false)).join("");
+  $("#rFoundList").innerHTML = H.filter(h=>S.found.has(h.id)).map(h=>itemHTML(h,true)).join("") || `<div class="item"><div class="m">Ninguno esta vez. ¡Inténtalo de nuevo!</div></div>`;
+  show("sRes");
+  send({fecha:new Date().toISOString(), ...player, escenario:ESCENARIO, encontrados:S.found.size, total:TOTAL,
+        errores:S.miss, tiempoSeg:used, puntaje:pts, aprobado:pass?"SI":"NO", faltantes:missed.map(h=>h.title).join(" | ")});
+}
+
+function send(data){
+  const st=$("#rStatus");
+  if(!ENDPOINT){st.textContent="Modo demostración: este resultado no se guarda.";return}
+  st.textContent="Registrando resultado…";
+  fetch(ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data)})
+    .then(()=>{st.textContent="Resultado enviado al registro de Capital Humano."})
+    .catch(()=>{st.textContent="No se pudo registrar el resultado. Avisa a Capital Humano."});
+}
+
+$("#bAgain").addEventListener("click", start);
+$("#bHome").addEventListener("click", ()=>{show("sStart")});
+</script>
+</body>
+</html>
